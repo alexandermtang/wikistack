@@ -3,7 +3,9 @@ const express = require('express'),
       morgan = require('morgan'),
       routes = require('./routes'),
       path = require('path'),
-      bodyParser = require('body-parser');
+      bodyParser = require('body-parser'),
+      Promise = require('bluebird'),
+      models = require('./models');
 const app = express();
 
 app.use(morgan('tiny'));
@@ -15,8 +17,12 @@ app.set('view engine', 'html');
 app.engine('html', nunjucks.render);
 nunjucks.configure('views', {noCache: true});
 
-app.listen(3000, function() {
-  console.log('server listening on port 3000');
-});
+Promise.all([models.User.sync, models.Page.sync])
+    .then(function () {
+        app.listen(3000, function() {
+            console.log('server listening on port 3000');
+        });
+    })
+    .catch(console.error);
 
 app.use('/', routes);
